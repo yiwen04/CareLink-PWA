@@ -88,5 +88,3 @@ Shell: Windows PowerShell — give PowerShell commands, not bash.
 - Ask before adding a new dependency (Vitest, Cypress, Tailwind and
   vite-plugin-pwa are already approved).
 - Make small, focused commits with clear messages.
-
-testing
