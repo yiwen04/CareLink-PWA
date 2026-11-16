@@ -75,7 +75,7 @@ export default function AdminLogin() {
           className="space-y-5 rounded-2xl bg-white p-6 shadow-sm"
           data-cy="admin-login-form"
         >
-          <h1 className="text-xl font-bold text-ink">Admin log in</h1>
+          <h1 className="text-2xl font-bold text-ink">Admin log in</h1>
 
           <label className="block">
             <span className="mb-2 block font-semibold text-ink">Email</span>
@@ -115,7 +115,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-highlight py-3 font-semibold text-brand disabled:opacity-60"
+            className="w-full rounded-xl bg-primary py-3 font-semibold text-white disabled:opacity-60"
             data-cy="admin-login-submit"
           >
             {loading ? 'Logging in…' : 'Log in'}
