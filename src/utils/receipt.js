@@ -16,6 +16,12 @@ export function validateReceipt(file) {
   return null
 }
 
+// Is a stored receipt a PDF? (Then the admin gets a link, not a picture.)
+// Looks at the file ending, e.g. "pledges/abc/receipt.pdf" → true
+export function isPdfReceipt(path) {
+  return typeof path === 'string' && path.toLowerCase().endsWith('.pdf')
+}
+
 // Where the file is stored inside the bucket, e.g. pledges/<pledge id>/receipt.jpg
 export function receiptPath(pledgeId, file) {
   return `pledges/${pledgeId}/receipt.${RECEIPT_TYPES[file.type]}`

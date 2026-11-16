@@ -8,6 +8,7 @@ import AdminLogin from './pages/AdminLogin'
 import AdminWishlist from './pages/AdminWishlist'
 import AdminItemForm from './pages/AdminItemForm'
 import AdminDonations from './pages/AdminDonations'
+import AdminDonationDetail from './pages/AdminDonationDetail'
 import RequireAdmin from './components/RequireAdmin'
 import AdminLayout from './components/AdminLayout'
 
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/admin/wishlist/new" element={<AdminItemForm />} />
             <Route path="/admin/wishlist/:id" element={<AdminItemForm />} />
             <Route path="/admin/donations" element={<AdminDonations />} />
+            <Route path="/admin/donations/:id" element={<AdminDonationDetail />} />
           </Route>
         </Route>
       </Routes>

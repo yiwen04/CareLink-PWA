@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAdminWishlist } from '../hooks/useAdminWishlist'
 import { useArchiveItems } from '../hooks/useArchiveItems'
+import { useFlashMessage } from '../hooks/useFlashMessage'
 import AdminItemRow from '../components/AdminItemRow'
 import ArchiveConfirm from '../components/ArchiveConfirm'
 import { itemCount, toggleId } from '../utils/selection'
@@ -13,19 +14,9 @@ export default function AdminWishlist() {
   const { items, loading, error, reload } = useAdminWishlist()
   const { archive, archiving, archiveError, clearError } = useArchiveItems()
 
-  const location = useLocation()
-  const navigate = useNavigate()
-
   // Green success message. Starts with the message passed from the form
   // after saving (e.g. 'Saved "Rice".'), and is reused after archiving.
-  const [flash, setFlash] = useState(() => location.state?.message)
-
-  // Remove the form's message from browser history, so a refresh doesn't show it again
-  useEffect(() => {
-    if (location.state?.message) {
-      navigate(location.pathname, { replace: true, state: null })
-    }
-  }, [location, navigate])
+  const [flash, setFlash] = useFlashMessage()
 
   // Select mode
   const [selecting, setSelecting] = useState(false)
