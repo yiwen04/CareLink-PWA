@@ -53,10 +53,10 @@ export default function PledgeThankYou() {
       <p className="mt-2 text-muted">Your pledge is saved. Here is your summary.</p>
 
       {/* Pledge summary */}
-      <div className="mt-6 rounded-2xl bg-white p-4 ring-1 ring-line">
+      <div className="mt-6 rounded-2xl border border-line bg-white p-4">
         <div className="flex items-start justify-between gap-3">
           <p className="font-semibold text-ink">{qty} × {itemName}</p>
-          <span className="shrink-0 rounded-full bg-needed-bg px-3 py-1 text-xs font-semibold text-needed-text">
+          <span className="shrink-0 rounded-full bg-needed-bg px-3 py-1 text-sm font-semibold text-needed-text">
             Pending
           </span>
         </div>

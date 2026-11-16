@@ -52,7 +52,7 @@ export default function Layout() {
               <Link
                 to="/admin/login"
                 onClick={() => setOpen(false)}
-                className="block rounded-xl px-3 py-2 text-sm text-muted"
+                className="block rounded-xl px-3 py-2 text-muted"
                 data-cy="drawer-admin-login"
               >
                 Admin login
