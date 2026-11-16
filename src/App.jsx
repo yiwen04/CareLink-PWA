@@ -4,11 +4,13 @@ import Wishlist from './pages/Wishlist'
 import KidsHeroes from './pages/KidsHeroes'
 import PledgeForm from './pages/PledgeForm'
 import PledgeThankYou from './pages/PledgeThankYou'
+import HeroStatus from './pages/HeroStatus'
 import AdminLogin from './pages/AdminLogin'
 import AdminWishlist from './pages/AdminWishlist'
 import AdminItemForm from './pages/AdminItemForm'
 import AdminDonations from './pages/AdminDonations'
 import AdminDonationDetail from './pages/AdminDonationDetail'
+import AdminHeroDetail from './pages/AdminHeroDetail'
 import RequireAdmin from './components/RequireAdmin'
 import AdminLayout from './components/AdminLayout'
 
@@ -21,6 +23,8 @@ export default function App() {
           <Route path="/kids-heroes" element={<KidsHeroes />} />
           <Route path="/pledge/:id" element={<PledgeForm />} />
           <Route path="/thank-you" element={<PledgeThankYou />} />
+          {/* A donor's Kids Hero status + badge. No login: the id is the private link. */}
+          <Route path="/hero/:id" element={<HeroStatus />} />
         </Route>
 
         {/* Admin pages: outside <Layout /> so the donor menu doesn't show */}
@@ -37,6 +41,7 @@ export default function App() {
             <Route path="/admin/wishlist/:id" element={<AdminItemForm />} />
             <Route path="/admin/donations" element={<AdminDonations />} />
             <Route path="/admin/donations/:id" element={<AdminDonationDetail />} />
+            <Route path="/admin/heroes/:id" element={<AdminHeroDetail />} />
           </Route>
         </Route>
       </Routes>

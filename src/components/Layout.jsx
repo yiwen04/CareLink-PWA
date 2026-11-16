@@ -1,13 +1,21 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
+import { getHeroId } from '../utils/heroStorage'
 
-const links = [
+const baseLinks = [
   { to: '/', label: 'Wish list' },
   { to: '/kids-heroes', label: 'Kids Heroes' },
 ]
 
 export default function Layout() {
   const [open, setOpen] = useState(false)
+
+  // Read on every render, so the link appears as soon as a donor subscribes
+  // (opening the menu re-renders this component).
+  const heroId = getHeroId()
+  const links = heroId
+    ? [...baseLinks, { to: `/hero/${heroId}`, label: 'My Kids Hero badge', cy: 'drawer-hero-badge' }]
+    : baseLinks
 
   return (
     <div className="min-h-screen bg-page font-sans text-ink">
@@ -38,6 +46,7 @@ export default function Layout() {
                 key={link.to}
                 to={link.to}
                 end
+                data-cy={link.cy}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
                   `mb-1 block rounded-xl px-3 py-2 ${isActive ? 'bg-accent font-semibold text-primary' : 'text-muted'}`

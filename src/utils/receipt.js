@@ -16,10 +16,23 @@ export function validateReceipt(file) {
   return null
 }
 
+// Same as validateReceipt, but a receipt MUST be chosen.
+// Used by both checkouts (pledges and Kids Heroes): donors always upload one.
+export function validateRequiredReceipt(file) {
+  if (!file) return 'Please upload your transfer receipt.'
+  return validateReceipt(file)
+}
+
 // Is a stored receipt a PDF? (Then the admin gets a link, not a picture.)
 // Looks at the file ending, e.g. "pledges/abc/receipt.pdf" → true
 export function isPdfReceipt(path) {
   return typeof path === 'string' && path.toLowerCase().endsWith('.pdf')
+}
+
+// Kids Heroes receipts: subscriptions/<subscription id>/receipt.jpg
+// The folder must be 'subscriptions' to pass the storage upload policy.
+export function subscriptionReceiptPath(subscriptionId, file) {
+  return `subscriptions/${subscriptionId}/receipt.${RECEIPT_TYPES[file.type]}`
 }
 
 // Where the file is stored inside the bucket, e.g. pledges/<pledge id>/receipt.jpg

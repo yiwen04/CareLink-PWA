@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-
-// How long a receipt link works, in seconds. Short on purpose:
-// the bucket is private and the link is like a temporary key.
-const RECEIPT_LINK_SECONDS = 600 // 10 minutes
+import { signReceipt } from '../lib/receiptUrl'
 
 // Load ONE pledge (any status) with its wish list item, plus a
 // temporary link to its receipt if there is one.
@@ -44,15 +41,9 @@ export function usePledge(id) {
       // 2. No receipt? Done.
       if (!pledge.receipt_path) return { pledge }
 
-      // 3. Ask Storage for a short-lived link. Only admins are allowed to
-      //    read the private 'receipts' bucket (see the receipts migration).
-      const { data: signed, error: signError } = await supabase.storage
-        .from('receipts')
-        .createSignedUrl(pledge.receipt_path, RECEIPT_LINK_SECONDS)
-
-      return signError
-        ? { pledge, receiptError: "Couldn't load the receipt. Refresh the page to try again." }
-        : { pledge, receiptUrl: signed.signedUrl }
+      // 3. A short-lived link to the private receipt (admins only)
+      const { url, error: receiptError } = await signReceipt(pledge.receipt_path)
+      return { pledge, receiptUrl: url ?? null, receiptError: receiptError ?? null }
     }
 
     load().then((result) => {
