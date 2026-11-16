@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import TransferDetails from '../components/TransferDetails'
+import { thankYouSteps } from '../utils/thankYouSteps'
 
 // Last step of the donor pledge flow.
 // PledgeForm sends the pledge summary here as router "state" (kept in the browser
@@ -32,17 +32,8 @@ export default function PledgeThankYou() {
 
   const { name, itemName, qty, amount, reference, hasReceipt } = pledge
 
-  const steps = hasReceipt
-    ? [
-        'We check your transfer receipt.',
-        'We email you once your pledge is confirmed.',
-        'The item’s progress on the wishlist goes up.',
-      ]
-    : [
-        `Transfer${amount !== null ? ` RM ${amount.toFixed(2)}` : ''} using the details below. Add your reference ${reference} to the transfer note.`,
-        'We email you once your transfer arrives and your pledge is confirmed.',
-        'The item’s progress on the wishlist goes up.',
-      ]
+  // The transfer already happened in the checkout sheet, so no bank details here
+  const steps = thankYouSteps(hasReceipt)
 
   return (
     <div data-cy="pledge-thanks">
@@ -78,12 +69,6 @@ export default function PledgeThankYou() {
           </li>
         ))}
       </ol>
-
-      {!hasReceipt && (
-        <div className="mt-6">
-          <TransferDetails />
-        </div>
-      )}
 
       {backButton}
     </div>
