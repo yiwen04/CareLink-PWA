@@ -6,6 +6,7 @@ import PledgeForm from './pages/PledgeForm'
 import PledgeThankYou from './pages/PledgeThankYou'
 import AdminLogin from './pages/AdminLogin'
 import AdminWishlist from './pages/AdminWishlist'
+import AdminItemForm from './pages/AdminItemForm'
 import AdminDonations from './pages/AdminDonations'
 import RequireAdmin from './components/RequireAdmin'
 import AdminLayout from './components/AdminLayout'
@@ -29,6 +30,10 @@ export default function App() {
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<Navigate to="/admin/wishlist" replace />} />
             <Route path="/admin/wishlist" element={<AdminWishlist />} />
+            {/* Same page for add and edit. React Router picks the exact
+                "new" match over ":id", so "new" is never treated as an id. */}
+            <Route path="/admin/wishlist/new" element={<AdminItemForm />} />
+            <Route path="/admin/wishlist/:id" element={<AdminItemForm />} />
             <Route path="/admin/donations" element={<AdminDonations />} />
           </Route>
         </Route>

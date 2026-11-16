@@ -1,17 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-
-// Decide which badge an item gets
-function getBadge(item) {
-  if (item.pledged_qty >= item.target_qty) {
-    return { label: 'Completed', style: 'bg-green-100 text-green-800', order: 2 }
-  }
-  if (item.urgency === 'high') {
-    return { label: 'Urgent', style: 'bg-urgent-bg text-urgent-text', order: 0 }
-  }
-  return { label: 'Needed', style: 'bg-needed-bg text-needed-text', order: 1 }
-}
+import { getBadge, getPercent, sortByUrgency } from '../utils/badge'
 
 export default function Wishlist() {
   const [items, setItems] = useState([])
@@ -31,8 +21,7 @@ export default function Wishlist() {
         setError(error.message)
       } else {
         // 2. Sort: Urgent → Needed → Completed
-        data.sort((a, b) => getBadge(a).order - getBadge(b).order)
-        setItems(data)
+        setItems(sortByUrgency(data))
         setError(null)
       }
       setLoading(false)
@@ -67,7 +56,7 @@ export default function Wishlist() {
       <div className="mt-4 space-y-4">
         {items.map((item) => {
           const badge = getBadge(item)
-          const percent = Math.min(100, Math.round((item.pledged_qty / item.target_qty) * 100))
+          const percent = getPercent(item)
 
           const isCompleted = item.pledged_qty >= item.target_qty
           const Card = isCompleted ? 'div' : Link
