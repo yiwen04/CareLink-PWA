@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import BottomSheet from '../components/BottomSheet'
 import TransferDetails from '../components/TransferDetails'
@@ -30,6 +30,7 @@ function Field({ label, name, type = 'text', placeholder, value, onChange, error
 
 export default function PledgeForm() {
   const { id } = useParams() // the item id from the address /pledge/:id
+  const navigate = useNavigate()
   const [item, setItem] = useState(null)
   const [loadError, setLoadError] = useState(null)
   const [qty, setQty] = useState(1)
@@ -38,7 +39,6 @@ export default function PledgeForm() {
   const [showCheckout, setShowCheckout] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
-  const [saved, setSaved] = useState(false)
   const [receipt, setReceipt] = useState(null)
   const [receiptError, setReceiptError] = useState(null)
 
@@ -132,29 +132,23 @@ export default function PledgeForm() {
     setSubmitting(false)
     if (error) {
       setSubmitError('Sorry, we could not save your pledge. Please try again.')
-    } else {
-      setShowCheckout(false)
-      setSaved(true)
+      return
     }
-  }
 
-  if (saved) {
-    return (
-      <div data-cy="pledge-success">
-        <h1 className="text-2xl font-bold text-ink">Thank you, {form.name.trim()}!</h1>
-        <p className="mt-2 text-muted">
-          Your pledge of {qty} × {item.name}
-          {amount !== null && ` (RM ${amount.toFixed(2)})`} is saved.{' '}
-          {receipt
-            ? 'We have your receipt and will confirm your pledge by email once we check it.'
-            : 'Once we receive your transfer, we will confirm it by email.'}
-        </p>
-        <div className="mt-6">
-          <TransferDetails />
-        </div>
-        <Link to="/" className="mt-6 inline-block font-semibold text-primary">← Back to wishlist</Link>
-      </div>
-    )
+    // Go to the thank-you page. "replace" swaps this form out of the history,
+    // so pressing Back returns to the wishlist instead of a filled-in form.
+    // The summary travels as router state, never in the URL (keeps the name private).
+    navigate('/thank-you', {
+      replace: true,
+      state: {
+        name: form.name.trim(),
+        itemName: item.name,
+        qty,
+        amount,
+        reference: pledgeId.slice(0, 8).toUpperCase(),
+        hasReceipt: !!path,
+      },
+    })
   }
 
   if (remaining <= 0) {
