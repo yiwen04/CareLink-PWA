@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import BottomSheet from '../components/BottomSheet'
+import TransferDetails from '../components/TransferDetails'
+import ReceiptUpload from '../components/ReceiptUpload'
+import { receiptPath, validateReceipt } from '../utils/receipt'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -32,6 +36,11 @@ export default function PledgeForm() {
   const [form, setForm] = useState({ name: '', email: '', phone: '' })
   const [errors, setErrors] = useState({})
   const [showCheckout, setShowCheckout] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+  const [saved, setSaved] = useState(false)
+  const [receipt, setReceipt] = useState(null)
+  const [receiptError, setReceiptError] = useState(null)
 
   // Load this one item from Supabase
   useEffect(() => {
@@ -78,7 +87,74 @@ export default function PledgeForm() {
   }
 
   function handlePledge() {
-    if (validate()) setShowCheckout(true)
+    if (validate()) {
+      setSubmitError(null)
+      setShowCheckout(true)
+    }
+  }
+
+  function chooseReceipt(file) {
+    setReceipt(file)
+    setReceiptError(validateReceipt(file))
+  }
+
+  // Save the pledge as "pending". An admin confirms it after the transfer arrives.
+  // No .select() after insert: visitors may create pledges but not read them back (RLS).
+  // So we make the pledge id here, upload the receipt under it first, then save the row.
+  async function confirmPledge() {
+    if (receiptError) return
+    setSubmitting(true)
+    setSubmitError(null)
+
+    const pledgeId = crypto.randomUUID()
+    let path = null
+    if (receipt) {
+      path = receiptPath(pledgeId, receipt)
+      const { error: uploadError } = await supabase.storage
+        .from('receipts')
+        .upload(path, receipt, { contentType: receipt.type, upsert: false })
+      if (uploadError) {
+        setSubmitting(false)
+        setSubmitError('Sorry, we could not upload your receipt. Please try again, or remove it and pledge without it.')
+        return
+      }
+    }
+
+    const { error } = await supabase.from('pledges').insert({
+      id: pledgeId,
+      wishlist_item_id: item.id,
+      donor_name: form.name.trim(),
+      donor_email: form.email.trim(),
+      donor_phone: form.phone.trim() || null,
+      qty,
+      receipt_path: path,
+    })
+    setSubmitting(false)
+    if (error) {
+      setSubmitError('Sorry, we could not save your pledge. Please try again.')
+    } else {
+      setShowCheckout(false)
+      setSaved(true)
+    }
+  }
+
+  if (saved) {
+    return (
+      <div data-cy="pledge-success">
+        <h1 className="text-2xl font-bold text-ink">Thank you, {form.name.trim()}!</h1>
+        <p className="mt-2 text-muted">
+          Your pledge of {qty} × {item.name}
+          {amount !== null && ` (RM ${amount.toFixed(2)})`} is saved.{' '}
+          {receipt
+            ? 'We have your receipt and will confirm your pledge by email once we check it.'
+            : 'Once we receive your transfer, we will confirm it by email.'}
+        </p>
+        <div className="mt-6">
+          <TransferDetails />
+        </div>
+        <Link to="/" className="mt-6 inline-block font-semibold text-primary">← Back to wishlist</Link>
+      </div>
+    )
   }
 
   if (remaining <= 0) {
@@ -136,12 +212,48 @@ export default function PledgeForm() {
         We only use your details to confirm your pledge. No account is needed.
       </p>
 
-      <button onClick={handlePledge} className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-white">
+      <button data-cy="pledge-submit" onClick={handlePledge} className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-white">
         Pledge
       </button>
 
-      {/* TEMPORARY: replaced by the checkout sheet in E3 */}
-      {showCheckout && <p className="mt-4 text-center text-sm text-green-700">✓ Form looks good. Checkout sheet comes in E3.</p>}
+      {showCheckout && (
+        <BottomSheet title="Confirm your pledge" onClose={() => !submitting && setShowCheckout(false)}>
+          <div className="space-y-1 text-ink">
+            <p>
+              <span className="font-semibold">{qty} × {item.name}</span>
+            </p>
+            {amount !== null && <p className="text-2xl font-bold text-brand">RM {amount.toFixed(2)}</p>}
+            <p className="text-sm text-muted">
+              {form.name.trim()} · {form.email.trim()}
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <TransferDetails />
+          </div>
+
+          <p className="mt-4 text-sm text-muted">
+            Please transfer by bank or DuitNow QR. Your pledge stays pending until we confirm the payment.
+          </p>
+
+          <div className="mt-5">
+            <ReceiptUpload file={receipt} onChange={chooseReceipt} error={receiptError} disabled={submitting} />
+          </div>
+
+          {submitError && (
+            <p data-cy="pledge-error" className="mt-4 text-sm text-urgent-text">{submitError}</p>
+          )}
+
+          <button
+            data-cy="pledge-confirm"
+            onClick={confirmPledge}
+            disabled={submitting || !!receiptError}
+            className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-white disabled:opacity-60"
+          >
+            {submitting ? (receipt ? 'Uploading…' : 'Saving…') : 'Confirm pledge'}
+          </button>
+        </BottomSheet>
+      )}
     </div>
   )
 }
