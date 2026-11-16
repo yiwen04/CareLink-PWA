@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 
 const links = [
   { to: '/', label: 'Wish list' },
@@ -46,6 +46,18 @@ export default function Layout() {
                 {link.label}
               </NavLink>
             ))}
+
+            {/* Staff-only entry, kept small and separate from the donor links */}
+            <div className="mt-6 border-t border-line pt-4">
+              <Link
+                to="/admin/login"
+                onClick={() => setOpen(false)}
+                className="block rounded-xl px-3 py-2 text-sm text-muted"
+                data-cy="drawer-admin-login"
+              >
+                Admin login
+              </Link>
+            </div>
           </nav>
         </div>
       )}
