@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 // Decide which badge an item gets
@@ -68,8 +69,15 @@ export default function Wishlist() {
           const badge = getBadge(item)
           const percent = Math.min(100, Math.round((item.pledged_qty / item.target_qty) * 100))
 
+          const isCompleted = item.pledged_qty >= item.target_qty
+          const Card = isCompleted ? 'div' : Link
+
           return (
-            <div key={item.id} className="rounded-2xl border border-line bg-white p-4">
+            <Card
+              key={item.id}
+              to={isCompleted ? undefined : `/pledge/${item.id}`}
+              className={`block rounded-2xl border border-line bg-white p-4 ${isCompleted ? 'opacity-70' : 'transition active:scale-[0.98]'}`}
+            >
               <div className="flex items-start justify-between gap-3">
                 <h2 className="font-semibold text-ink">{item.name}</h2>
                 <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${badge.style}`}>
@@ -88,7 +96,7 @@ export default function Wishlist() {
               <p className="mt-2 text-sm text-muted">
                 {item.pledged_qty} of {item.target_qty} pledged
               </p>
-            </div>
+            </Card>
           )
         })}
       </div>
