@@ -14,9 +14,9 @@ export default function AdminLayout() {
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState(null)
 
-  // Count pending pledges again every time the admin changes page
+  // Count pending pledges + Kids Heroes again every time the admin changes page
   const { pathname } = useLocation()
-  const pendingCount = usePendingCount(pathname)
+  const pendingCount = usePendingCount(pathname).total
 
   async function handleLogout() {
     setLoggingOut(true)

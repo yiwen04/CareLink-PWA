@@ -11,10 +11,11 @@ export function useFlashMessage() {
   // Copy the message into this page's own state when the page opens...
   const [message, setMessage] = useState(() => location.state?.message ?? null)
 
-  // ...then remove it from browser history, so a refresh doesn't show it again
+  // ...then remove it from browser history, so a refresh doesn't show it again.
+  // Keep the ?query part (e.g. ?tab=heroes) so the page stays on the same tab.
   useEffect(() => {
     if (location.state?.message) {
-      navigate(location.pathname, { replace: true, state: null })
+      navigate({ pathname: location.pathname, search: location.search }, { replace: true, state: null })
     }
   }, [location, navigate])
 

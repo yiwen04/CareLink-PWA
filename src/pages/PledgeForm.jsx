@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import BottomSheet from '../components/BottomSheet'
 import TransferDetails from '../components/TransferDetails'
 import ReceiptUpload from '../components/ReceiptUpload'
-import { receiptPath, validateReceipt } from '../utils/receipt'
+import { receiptPath, validateReceipt, validateRequiredReceipt } from '../utils/receipt'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -102,22 +102,24 @@ export default function PledgeForm() {
   // No .select() after insert: visitors may create pledges but not read them back (RLS).
   // So we make the pledge id here, upload the receipt under it first, then save the row.
   async function confirmPledge() {
-    if (receiptError) return
+    // A receipt is required: stop here (and say why) if none was chosen
+    const receiptProblem = validateRequiredReceipt(receipt)
+    if (receiptProblem) {
+      setReceiptError(receiptProblem)
+      return
+    }
     setSubmitting(true)
     setSubmitError(null)
 
     const pledgeId = crypto.randomUUID()
-    let path = null
-    if (receipt) {
-      path = receiptPath(pledgeId, receipt)
-      const { error: uploadError } = await supabase.storage
-        .from('receipts')
-        .upload(path, receipt, { contentType: receipt.type, upsert: false })
-      if (uploadError) {
-        setSubmitting(false)
-        setSubmitError('Sorry, we could not upload your receipt. Please try again, or remove it and pledge without it.')
-        return
-      }
+    const path = receiptPath(pledgeId, receipt)
+    const { error: uploadError } = await supabase.storage
+      .from('receipts')
+      .upload(path, receipt, { contentType: receipt.type, upsert: false })
+    if (uploadError) {
+      setSubmitting(false)
+      setSubmitError('Sorry, we could not upload your receipt. Please try again, or choose a different file.')
+      return
     }
 
     const { error } = await supabase.from('pledges').insert({
@@ -231,7 +233,7 @@ export default function PledgeForm() {
           </p>
 
           <div className="mt-5">
-            <ReceiptUpload file={receipt} onChange={chooseReceipt} error={receiptError} disabled={submitting} />
+            <ReceiptUpload file={receipt} onChange={chooseReceipt} error={receiptError} disabled={submitting} required />
           </div>
 
           {submitError && (
@@ -244,7 +246,7 @@ export default function PledgeForm() {
             disabled={submitting || !!receiptError}
             className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-white disabled:opacity-60"
           >
-            {submitting ? (receipt ? 'Uploading…' : 'Saving…') : 'Confirm pledge'}
+            {submitting ? 'Uploading…' : 'Confirm pledge'}
           </button>
         </BottomSheet>
       )}

@@ -1,12 +1,15 @@
 import { RECEIPT_TYPES } from '../utils/receipt'
 
-// File picker for the bank transfer receipt (optional)
-export default function ReceiptUpload({ file, onChange, error, disabled }) {
+// File picker for the bank transfer receipt.
+// required: false for pledges (default), true for Kids Heroes.
+export default function ReceiptUpload({ file, onChange, error, disabled, required = false }) {
   return (
     <div>
-      <p className="font-semibold text-ink">Transfer receipt (optional)</p>
+      <p className="font-semibold text-ink">Transfer receipt ({required ? 'required' : 'optional'})</p>
       <p className="mt-1 text-sm text-muted">
-        Already transferred? Upload a screenshot or PDF of your receipt so we can confirm faster.
+        {required
+          ? 'After transferring, upload a screenshot or PDF of your receipt so the home can confirm it.'
+          : 'Already transferred? Upload a screenshot or PDF of your receipt so we can confirm faster.'}
       </p>
 
       <label

@@ -1,9 +1,11 @@
 import { bankDetails } from '../config/bank'
 
-export default function TransferDetails() {
+// title: heading of the box. Pledges use the default;
+// Kids Heroes passes e.g. "Transfer RM50 every month to:"
+export default function TransferDetails({ title = 'Transfer to:' }) {
   return (
     <div className="rounded-2xl bg-accent p-4 text-brand">
-      <p className="font-semibold">Transfer to:</p>
+      <p className="font-semibold">{title}</p>
       <p className="mt-2">Bank: {bankDetails.bankName}</p>
       <p className="mt-1">Account name: {bankDetails.accountName}</p>
       <p className="mt-1">
