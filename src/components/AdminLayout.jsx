@@ -1,16 +1,22 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { usePendingCount } from '../hooks/usePendingCount'
 
+// showCount: this tab gets the "how many are waiting" badge
 const tabs = [
   { to: '/admin/wishlist', label: 'Wishlist', icon: '🎁', cy: 'admin-tab-wishlist' },
-  { to: '/admin/donations', label: 'Donations waiting', icon: '🧾', cy: 'admin-tab-donations' },
+  { to: '/admin/donations', label: 'Donations waiting', icon: '🧾', cy: 'admin-tab-donations', showCount: true },
 ]
 
 // Frame around every admin page: top bar, page content, bottom tab bar.
 export default function AdminLayout() {
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState(null)
+
+  // Count pending pledges again every time the admin changes page
+  const { pathname } = useLocation()
+  const pendingCount = usePendingCount(pathname)
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -74,8 +80,21 @@ export default function AdminLayout() {
                 }`
               }
             >
-              <span aria-hidden="true" className="text-xl">{tab.icon}</span>
+              <span className="flex items-center gap-1">
+                <span aria-hidden="true" className="text-xl">{tab.icon}</span>
+                {/* Count badge (Figma: amber pill next to the icon). Hidden when 0. */}
+                {tab.showCount && pendingCount > 0 && (
+                  <span
+                    className="min-w-5 rounded-full bg-needed-bg px-1.5 text-center text-xs font-semibold text-needed-text"
+                    data-cy="admin-pending-count"
+                  >
+                    {pendingCount > 99 ? '99+' : pendingCount}
+                  </span>
+                )}
+              </span>
               {tab.label}
+              {/* Screen readers hear "Donations waiting, 3 waiting" */}
+              {tab.showCount && pendingCount > 0 && <span className="sr-only">, {pendingCount} waiting</span>}
             </NavLink>
           ))}
         </div>
