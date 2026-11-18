@@ -7,7 +7,11 @@ import TransferDetails from '../components/TransferDetails'
 import { formatDate } from '../utils/format'
 import { formatHeroAmount } from '../utils/heroAmount'
 import { nextTransferDate } from '../utils/heroDates'
+import { BADGES, getHeroBadges } from '../utils/heroBadges'
 import { forgetHeroId, getHeroId } from '../utils/heroStorage'
+
+// The badges shown in "Badges you can earn", in order
+const EARNABLE = ['kids-hero', 'bronze', 'silver', 'gold']
 
 // Text for each status (header, pill and explanation)
 const statusText = {
@@ -87,6 +91,7 @@ export default function HeroStatus() {
   const monthly = formatHeroAmount(hero.amount)
   const isActive = hero.status === 'active'
   const next = isActive && hero.started_at ? nextTransferDate(hero.started_at) : null
+  const badges = getHeroBadges(hero)
 
   return (
     <div data-cy={`hero-status-${hero.status}`}>
@@ -96,13 +101,19 @@ export default function HeroStatus() {
         <p className="mt-2 text-white">{text.intro}</p>
       </section>
 
-      {/* Badge card */}
+      {/* Badge card: pending → Status Pending; active → Kids Hero + season badge; failed → none */}
       <section
         className={`mt-6 rounded-2xl border-2 p-6 text-center ${
           isActive ? 'border-highlight bg-yellow-50' : 'border-line bg-white'
         }`}
       >
-        <HeroBadge earned={isActive} />
+        {badges.length > 0 && (
+          <div className="flex flex-wrap items-start justify-center gap-4">
+            {badges.map((slug) => (
+              <HeroBadge key={slug} slug={slug} size="lg" />
+            ))}
+          </div>
+        )}
         <p className="mt-4 text-xl font-bold text-ink">{hero.first_name}</p>
         <p className="mt-1 text-muted">Monthly Kids Hero · {monthly} / month</p>
         <span className={`mt-3 inline-block rounded-full px-3 py-1 text-sm font-semibold ${text.pillClass}`} data-cy="hero-status-pill">
@@ -112,6 +123,21 @@ export default function HeroStatus() {
           <p className="mt-3 text-sm text-muted">Kids Hero since {formatDate(hero.started_at)}</p>
         )}
       </section>
+
+      {/* Badges you can earn: earned ones in colour, the rest locked (hidden if not confirmed or failed) */}
+      {hero.status !== 'failed' && (
+        <section className="mt-4 rounded-2xl border border-line bg-white p-4" data-cy="hero-earnable">
+          <h2 className="font-semibold text-brand">Badges you can earn</h2>
+          <div className="mt-3 grid grid-cols-4 gap-3">
+            {EARNABLE.map((slug) => (
+              <div key={slug} className="flex flex-col items-center text-center">
+                <HeroBadge slug={slug} locked={!badges.includes(slug)} showLabel={false} />
+                <p className="mt-1 text-xs text-muted">{BADGES[slug].caption}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Active: monthly gift + next transfer */}
       {isActive && (
