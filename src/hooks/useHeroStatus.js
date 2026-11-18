@@ -19,13 +19,16 @@ function readResult({ data, error }) {
   return { hero, error: null, notFound: !hero }
 }
 
+// id may be null (e.g. a visitor who never subscribed on this device):
+// then nothing is loaded and hero stays null.
 // Returns { hero, loading, error, notFound, reload }
 export function useHeroStatus(id) {
   const [state, setState] = useState({ hero: null, error: null, notFound: false })
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!!id)
 
   // Load when the page opens; ignore the answer if the donor already left
   useEffect(() => {
+    if (!id) return
     let ignore = false
     fetchHeroStatus(id).then((result) => {
       if (ignore) return
@@ -39,6 +42,7 @@ export function useHeroStatus(id) {
 
   // "Check again" / "Try again": fetch without blanking the page
   const reload = useCallback(async () => {
+    if (!id) return
     setState(readResult(await fetchHeroStatus(id)))
   }, [id])
 

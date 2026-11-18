@@ -5,6 +5,7 @@ import { useFlashMessage } from '../hooks/useFlashMessage'
 import PendingList from '../components/PendingList'
 import PledgeRow from '../components/PledgeRow'
 import HeroRow from '../components/HeroRow'
+import GeneralFundCard from '../components/GeneralFundCard'
 
 // Admin: everything waiting to be checked against the bank statement.
 // Two tabs: wish list pledges and Kids Hero subscriptions. Oldest first.
@@ -62,6 +63,7 @@ export default function AdminDonations() {
       )}
 
       <div role="tabpanel">
+        {tab === 'pledges' && <GeneralFundCard />}
         {tab === 'pledges' ? (
           <PendingList
             items={pledges.pledges}
@@ -70,7 +72,9 @@ export default function AdminDonations() {
             reload={pledges.reload}
             emptyTitle="No donations waiting"
             emptyText="New pledges will appear here."
-            renderItem={(pledge) => <PledgeRow pledge={pledge} />}
+            renderItem={(pledge) => (
+              <PledgeRow pledge={pledge} availability={pledges.availability.get(pledge.wishlist_item_id)} />
+            )}
             cy="donations"
           />
         ) : (

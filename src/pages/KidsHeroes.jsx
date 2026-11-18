@@ -4,11 +4,16 @@ import { useSubscriptionTiers } from '../hooks/useSubscriptionTiers'
 import TierOption from '../components/TierOption'
 import CustomAmountSheet from '../components/CustomAmountSheet'
 import HeroCheckoutSheet from '../components/HeroCheckoutSheet'
-import { saveHeroId } from '../utils/heroStorage'
+import HeroBadge from '../components/HeroBadge'
+import { useHeroStatus } from '../hooks/useHeroStatus'
+import { getHeroId, saveHeroId } from '../utils/heroStorage'
+import { BADGES, getHeroBadges } from '../utils/heroBadges'
+
+// The badges a Kids Hero can earn, shown locked as a preview
+const PREVIEW_BADGES = ['kids-hero', 'bronze', 'silver', 'gold']
 
 // Kids Heroes: monthly giving (US02, Figma "4 Kids Heroes").
 // 1. Pick a tier → 2. (Custom only) choose an amount → 3. checkout sheet.
-// No account needed.
 export default function KidsHeroes() {
   const navigate = useNavigate()
   const { tiers, loading, error, reload } = useSubscriptionTiers()
@@ -19,6 +24,11 @@ export default function KidsHeroes() {
   const [sheet, setSheet] = useState(null) // null, 'custom' or 'checkout'
 
   const tier = tiers.find((t) => t.id === tierId)
+
+  // This device's own subscription (if any), so earned badges show in colour.
+  // No saved id, still pending, failed or a lookup error → all badges stay locked.
+  const { hero } = useHeroStatus(getHeroId())
+  const earned = hero ? getHeroBadges(hero) : []
 
   // "Become a Kids Hero": custom → ask for the amount first; fixed → straight to checkout
   function handleStart() {
@@ -50,21 +60,23 @@ export default function KidsHeroes() {
       <section className="-mx-4 -mt-6 rounded-b-3xl bg-brand px-4 pb-6 pt-6">
         <h1 className="text-2xl font-bold text-highlight">Become a Kids Hero</h1>
         <p className="mt-2 text-white">
-          Give a fixed amount every month so the home can plan ahead. No account needed.
+          Give a fixed amount every month so the home can plan ahead.
         </p>
       </section>
 
       {/* Badge slots: a preview of what a confirmed Kids Hero gets */}
       <section className="mt-6 rounded-2xl border border-line bg-white p-4">
         <h2 className="font-semibold text-brand">Your Kids Hero badges</h2>
-        <p className="text-sm text-muted">Shown once the home confirms your transfer.</p>
-        <div className="mt-3 grid grid-cols-4 gap-3" aria-hidden="true">
-          {[1, 2, 3, 4].map((n) => (
-            <div
-              key={n}
-              className="flex aspect-square items-center justify-center rounded-full border-2 border-dashed border-line bg-page text-2xl text-line"
-            >
-              ★
+        <p className="text-sm text-muted">
+          {earned.includes('kids-hero')
+            ? "Badges in colour are the ones you've earned."
+            : 'Shown once the home confirms your transfer.'}
+        </p>
+        <div className="mt-3 grid grid-cols-4 gap-3" data-cy="hero-preview-badges">
+          {PREVIEW_BADGES.map((slug) => (
+            <div key={slug} className="flex flex-col items-center text-center">
+              <HeroBadge slug={slug} locked={!earned.includes(slug)} showLabel={false} />
+              <p className="mt-1 text-xs text-muted">{BADGES[slug].caption}</p>
             </div>
           ))}
         </div>

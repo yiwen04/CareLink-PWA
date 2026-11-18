@@ -108,7 +108,7 @@ export default function HeroCheckoutSheet({ tier, amount, onClose, onSuccess }) 
         </button>
 
         <p className="text-center text-xs text-muted">
-          No account needed. The home confirms your transfer, then your Kids Hero badge appears.
+          The home confirms your transfer, then your Kids Hero badge appears.
         </p>
       </form>
     </BottomSheet>

@@ -6,14 +6,20 @@ import DetailRow from '../components/DetailRow'
 import ReceiptPreview from '../components/ReceiptPreview'
 import ConfirmPledgeSheet from '../components/ConfirmPledgeSheet'
 import DeclinePledgeSheet from '../components/DeclinePledgeSheet'
+import RedirectPledgeSheet from '../components/RedirectPledgeSheet'
+import { useAvailability } from '../hooks/useAvailability'
 import { formatDate, formatRM, pledgeAmount } from '../utils/format'
 import { progressAfterConfirm } from '../utils/pledgeProgress'
+import { confirmCheck } from '../utils/pledgeLimits'
 
 // What to say when a pledge is no longer waiting
 const doneText = {
   confirmed: 'This donation was already confirmed.',
   rejected: 'This donation was already declined.',
+  redirected: 'This donation was redirected to the General Fund.',
 }
+
+const doneVerb = { confirmed: 'Confirmed', rejected: 'Declined', redirected: 'Redirected' }
 
 // Admin: one pledge in full, with its receipt, and Confirm / Decline.
 export default function AdminDonationDetail() {
@@ -21,22 +27,23 @@ export default function AdminDonationDetail() {
   const navigate = useNavigate()
   const { pledge, receiptUrl, receiptError, loading, loadError } = usePledge(id)
   const { decide, deciding, decisionError, clearError } = usePledgeDecision(id)
-  const [sheet, setSheet] = useState(null) // which sheet is open: null, 'confirm' or 'decline'
+  const [sheet, setSheet] = useState(null) // which sheet is open: null, 'confirm', 'decline' or 'redirect'
+  // Needed / confirmed totals for this pledge's item (waits until the pledge has loaded)
+  const { availability } = useAvailability(pledge?.wishlist_item_id)
 
   function openSheet(name) {
     clearError()
     setSheet(name)
   }
 
-  // status: 'confirmed' or 'rejected'
+  // status: 'confirmed', 'rejected' or 'redirected'
   async function handleDecision(status) {
     const ok = await decide(status)
     if (!ok) return // error is shown inside the sheet; it stays open
-    const verb = status === 'confirmed' ? 'Confirmed' : 'Declined'
     // Back to the list with a message. replace: Back won't return to this pledge.
     navigate('/admin/donations', {
       replace: true,
-      state: { message: `${verb} ${pledge.donor_name}'s donation.` },
+      state: { message: `${doneVerb[status]} ${pledge.donor_name}'s donation.` },
     })
   }
 
@@ -70,6 +77,9 @@ export default function AdminDonationDetail() {
   const amount = pledgeAmount(pledge.qty, item?.unit_price)
   const isPending = pledge.status === 'pending'
   const progress = item ? progressAfterConfirm(item, pledge.qty) : null
+  // Would confirming push the confirmed total above the amount needed?
+  const check = confirmCheck(availability, pledge.qty)
+  const canRedirect = check.exceeds && pledge.allow_general_fund
 
   return (
     <div>
@@ -89,6 +99,13 @@ export default function AdminDonationDetail() {
           {item?.name ?? 'Unknown item'} × {pledge.qty}
         </DetailRow>
         {amount !== null && <DetailRow label="Amount">{formatRM(amount)}</DetailRow>}
+        {check.known && (
+          <DetailRow label="Item totals">
+            <span data-cy="donation-needed-confirmed">
+              Needed {check.needed} / Confirmed {check.confirmed}
+            </span>
+          </DetailRow>
+        )}
         <DetailRow label="Submitted">{formatDate(pledge.created_at)}</DetailRow>
         <DetailRow label="Donor">{pledge.donor_name}</DetailRow>
         <DetailRow label="Email">
@@ -111,13 +128,24 @@ export default function AdminDonationDetail() {
       <h2 className="mt-6 mb-2 font-semibold text-ink">Transfer receipt</h2>
       <ReceiptPreview path={pledge.receipt_path} url={receiptUrl} error={receiptError} />
 
+      {/* Over the amount needed: Confirm is off. Decline, or redirect if the donor allowed it. */}
+      {isPending && check.exceeds && (
+        <p role="alert" className="mt-6 rounded-xl bg-urgent-bg px-4 py-3 text-sm text-urgent-text" data-cy="donation-exceeds">
+          This would exceed the amount needed.{' '}
+          {canRedirect
+            ? 'The donor allowed the General Fund, so you can redirect it.'
+            : 'You can only decline it.'}
+        </p>
+      )}
+
       {/* Actions (Figma: Confirm filled, Decline red outline) */}
       {isPending && (
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => openSheet('confirm')}
-            className="rounded-xl bg-primary py-3 font-semibold text-white"
+            disabled={check.exceeds}
+            className="rounded-xl bg-primary py-3 font-semibold text-white disabled:opacity-40"
             data-cy="donation-confirm"
           >
             Confirm
@@ -130,6 +158,16 @@ export default function AdminDonationDetail() {
           >
             Decline
           </button>
+          {canRedirect && (
+            <button
+              type="button"
+              onClick={() => openSheet('redirect')}
+              className="col-span-2 rounded-xl border-2 border-primary bg-white py-3 font-semibold text-primary"
+              data-cy="donation-redirect"
+            >
+              Redirect to General Fund
+            </button>
+          )}
         </div>
       )}
 
@@ -142,6 +180,17 @@ export default function AdminDonationDetail() {
           error={decisionError}
           onCancel={() => setSheet(null)}
           onConfirm={() => handleDecision('confirmed')}
+        />
+      )}
+
+      {sheet === 'redirect' && (
+        <RedirectPledgeSheet
+          pledge={pledge}
+          amount={amount}
+          busy={deciding}
+          error={decisionError}
+          onCancel={() => setSheet(null)}
+          onRedirect={() => handleDecision('redirected')}
         />
       )}
 

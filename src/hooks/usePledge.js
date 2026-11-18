@@ -22,7 +22,7 @@ export function usePledge(id) {
       const { data: pledge, error } = await supabase
         .from('pledges')
         .select(
-          'id, donor_name, donor_email, donor_phone, qty, status, receipt_path, created_at, ' +
+          'id, donor_name, donor_email, donor_phone, qty, status, receipt_path, allow_general_fund, wishlist_item_id, created_at, ' +
             'wishlist_items(name, unit_price, pledged_qty, target_qty)'
         )
         .eq('id', id)

@@ -3,8 +3,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import BottomSheet from '../components/BottomSheet'
 import TransferDetails from '../components/TransferDetails'
+import ItemTypeChip from '../components/ItemTypeChip'
 import ReceiptUpload from '../components/ReceiptUpload'
 import { receiptPath, validateReceipt, validateRequiredReceipt } from '../utils/receipt'
+import { useAvailability } from '../hooks/useAvailability'
+import { overPledgedMessage, readOverPledgedError, remainingQty, reservedQty } from '../utils/pledgeLimits'
+import { savePledgeId } from '../utils/pledgeStorage'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -41,6 +45,10 @@ export default function PledgeForm() {
   const [submitError, setSubmitError] = useState(null)
   const [receipt, setReceipt] = useState(null)
   const [receiptError, setReceiptError] = useState(null)
+  const [allowGeneralFund, setAllowGeneralFund] = useState(true)
+  const [pageError, setPageError] = useState(null) // e.g. "someone just pledged this item"
+  // Reserved quantity: confirmed + pending pledges both count as taken
+  const { availability, loading: availLoading, reload: reloadAvailability } = useAvailability(id)
 
   // Load this one item from Supabase
   useEffect(() => {
@@ -66,9 +74,10 @@ export default function PledgeForm() {
       </div>
     )
   }
-  if (!item) return <p className="text-muted">Loading…</p>
+  if (!item || availLoading) return <p className="text-muted">Loading…</p>
 
-  const remaining = item.target_qty - item.pledged_qty
+  const remaining = remainingQty(item, availability)
+  const reserved = reservedQty(item, availability)
   const price = item.unit_price ? Number(item.unit_price) : null
   const amount = price ? qty * price : null
 
@@ -89,6 +98,7 @@ export default function PledgeForm() {
   function handlePledge() {
     if (validate()) {
       setSubmitError(null)
+      setPageError(null)
       setShowCheckout(true)
     }
   }
@@ -130,12 +140,25 @@ export default function PledgeForm() {
       donor_phone: form.phone.trim() || null,
       qty,
       receipt_path: path,
+      allow_general_fund: allowGeneralFund,
     })
     setSubmitting(false)
     if (error) {
+      // The database says someone else took the last units first
+      const taken = readOverPledgedError(error)
+      if (taken) {
+        const row = await reloadAvailability() // show the fresh number
+        const left = row ? row.qty_remaining : taken.remaining
+        setQty(Math.max(1, Math.min(qty, left)))
+        setShowCheckout(false)
+        setPageError(overPledgedMessage(left))
+        return
+      }
       setSubmitError('Sorry, we could not save your pledge. Please try again.')
       return
     }
+
+    savePledgeId(pledgeId) // so the donor can find the status page again
 
     // Go to the thank-you page. "replace" swaps this form out of the history,
     // so pressing Back returns to the wishlist instead of a filled-in form.
@@ -148,6 +171,7 @@ export default function PledgeForm() {
         qty,
         amount,
         reference: pledgeId.slice(0, 8).toUpperCase(),
+        pledgeId,
         hasReceipt: !!path,
       },
     })
@@ -156,6 +180,11 @@ export default function PledgeForm() {
   if (remaining <= 0) {
     return (
       <div>
+        {pageError && (
+          <p role="alert" data-cy="pledge-taken-error" className="mb-4 rounded-xl bg-urgent-bg px-4 py-3 text-sm text-urgent-text">
+            {pageError}
+          </p>
+        )}
         <p className="text-muted">This item is fully pledged. Thank you!</p>
         <Link to="/" className="mt-4 inline-block font-semibold text-primary">← Back to wishlist</Link>
       </div>
@@ -173,8 +202,11 @@ export default function PledgeForm() {
       {/* Item summary */}
       <div className="mt-4 rounded-2xl bg-accent p-4">
         <p className="font-semibold text-brand">{item.name}</p>
+        <div className="mt-1">
+          <ItemTypeChip type={item.item_type} />
+        </div>
         <p className="mt-1 text-sm text-brand">
-          {item.pledged_qty} of {item.target_qty} pledged, {remaining} still needed
+          {reserved} of {item.target_qty} pledged, {remaining} still needed
         </p>
       </div>
 
@@ -195,7 +227,8 @@ export default function PledgeForm() {
           </div>
         )}
       </div>
-      {price && <p className="mt-2 text-xs text-muted">Price: RM {price.toFixed(2)} each</p>}
+      <p className="mt-2 text-sm text-muted" data-cy="pledge-max-note">Only {remaining} still needed</p>
+      {price && <p className="mt-1 text-xs text-muted">Price: RM {price.toFixed(2)} each</p>}
 
       {/* Donor details */}
       <div className="mt-6 space-y-5">
@@ -204,9 +237,28 @@ export default function PledgeForm() {
         <Field label="Phone (optional)" name="phone" type="tel" placeholder="012-345 6789" value={form.phone} onChange={updateField} error={errors.phone} />
       </div>
 
+      <label className="mt-6 flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={allowGeneralFund}
+          onChange={(e) => setAllowGeneralFund(e.target.checked)}
+          className="mt-1 h-5 w-5 shrink-0 accent-primary"
+          data-cy="pledge-general-fund"
+        />
+        <span className="text-sm text-ink">
+          If this item is already fully funded, use my donation for the General Fund (daily needs).
+        </span>
+      </label>
+
       <p className="mt-4 text-sm text-muted">
-        We only use your details to confirm your pledge. No account is needed.
+        We only use your details to confirm your pledge.
       </p>
+
+      {pageError && (
+        <p role="alert" data-cy="pledge-taken-error" className="mt-4 rounded-xl bg-urgent-bg px-4 py-3 text-sm text-urgent-text">
+          {pageError}
+        </p>
+      )}
 
       <button data-cy="pledge-submit" onClick={handlePledge} className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-white">
         Pledge

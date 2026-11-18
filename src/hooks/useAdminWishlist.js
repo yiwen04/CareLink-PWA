@@ -10,7 +10,7 @@ import { sortByUrgency } from '../utils/badge'
 function fetchActiveItems() {
   return supabase
     .from('wishlist_items')
-    .select('id, name, urgency, target_qty, pledged_qty, created_at')
+    .select('id, name, urgency, item_type, target_qty, pledged_qty, created_at')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 }

@@ -2,15 +2,17 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import FormField from './FormField'
 import { DESCRIPTION_MAX, NAME_MAX, toItemRow, validateItem } from '../utils/validateItem'
+import { DEFAULT_ITEM_TYPE, ITEM_TYPES, itemTypeIcon } from '../utils/itemTypes'
 
 // Turn a database row (or nothing, for a new item) into form values.
 // Inputs always hold strings, so numbers are converted with String().
 function toFormValues(item) {
   if (!item) {
-    return { name: '', description: '', target_qty: '', unit_price: '', urgency: 'medium' }
+    return { name: '', description: '', target_qty: '', unit_price: '', urgency: 'medium', item_type: DEFAULT_ITEM_TYPE }
   }
   return {
     name: item.name,
+    item_type: item.item_type ?? DEFAULT_ITEM_TYPE,
     description: item.description ?? '',
     target_qty: String(item.target_qty),
     unit_price: item.unit_price == null ? '' : String(item.unit_price),
@@ -100,6 +102,24 @@ export default function ItemForm({ item, save }) {
           data-cy="item-name"
           {...a11y('name')}
         />
+      </FormField>
+
+      <FormField id="item_type" label="Item type" error={errors.item_type}>
+        <select
+          id="item_type"
+          name="item_type"
+          value={values.item_type}
+          onChange={update}
+          className={inputClass('item_type')}
+          data-cy="item-type"
+          {...a11y('item_type')}
+        >
+          {ITEM_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {itemTypeIcon(type)} {type}
+            </option>
+          ))}
+        </select>
       </FormField>
 
       <FormField
