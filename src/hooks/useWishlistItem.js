@@ -16,7 +16,7 @@ export function useWishlistItem(id) {
 
     supabase
       .from('wishlist_items')
-      .select('id, name, description, target_qty, pledged_qty, unit_price, urgency')
+      .select('id, name, description, target_qty, pledged_qty, unit_price, urgency, item_type')
       .eq('id', id)
       .eq('status', 'active') // archived items can't be edited
       .maybeSingle() // 0 rows → data is null instead of an error

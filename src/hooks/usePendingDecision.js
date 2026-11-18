@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { CODE_OVER_CONFIRM } from '../utils/pledgeLimits'
+
+const CODE_CANNOT_REDIRECT = 'CL004'
 
 // Change the status of ONE row that is still 'pending'.
-// Used for pledges (confirmed / rejected) and Kids Heroes (active / failed).
+// Used for pledges (confirmed / rejected / redirected) and Kids Heroes (active / failed).
 // The app only changes status. Database triggers do the rest:
 //   pledges → apply_confirmed_pledge raises the item's pledged_qty
 //   subscriptions → set_subscription_started_at sets started_at
@@ -27,7 +30,14 @@ export function usePendingDecision(table, id) {
 
       setDeciding(false)
       if (error) {
-        setDecisionError("Couldn't save. Check your connection and try again.")
+        // The database refused: confirming would pass the amount needed
+        if (error.code === CODE_OVER_CONFIRM) {
+          setDecisionError('This would exceed the amount needed. Decline it, or redirect it to the General Fund.')
+        } else if (error.code === CODE_CANNOT_REDIRECT) {
+          setDecisionError('This donor did not allow their donation to go to the General Fund.')
+        } else {
+          setDecisionError("Couldn't save. Check your connection and try again.")
+        }
         return false
       }
       if (!data || data.length === 0) {

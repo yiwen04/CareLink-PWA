@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { getHeroId } from '../utils/heroStorage'
+import { getPledgeId } from '../utils/pledgeStorage'
 
 const baseLinks = [
   { to: '/', label: 'Wish list' },
@@ -13,9 +14,12 @@ export default function Layout() {
   // Read on every render, so the link appears as soon as a donor subscribes
   // (opening the menu re-renders this component).
   const heroId = getHeroId()
-  const links = heroId
-    ? [...baseLinks, { to: `/hero/${heroId}`, label: 'My Kids Hero badge', cy: 'drawer-hero-badge' }]
-    : baseLinks
+  const pledgeId = getPledgeId()
+  const links = [
+    ...baseLinks,
+    ...(pledgeId ? [{ to: `/pledge/status/${pledgeId}`, label: 'My latest pledge', cy: 'drawer-pledge-status' }] : []),
+    ...(heroId ? [{ to: `/hero/${heroId}`, label: 'My Kids Hero badge', cy: 'drawer-hero-badge' }] : []),
+  ]
 
   return (
     <div className="min-h-screen bg-page font-sans text-ink">

@@ -4,6 +4,7 @@ import Wishlist from './pages/Wishlist'
 import KidsHeroes from './pages/KidsHeroes'
 import PledgeForm from './pages/PledgeForm'
 import PledgeThankYou from './pages/PledgeThankYou'
+import PledgeStatus from './pages/PledgeStatus'
 import HeroStatus from './pages/HeroStatus'
 import AdminLogin from './pages/AdminLogin'
 import AdminWishlist from './pages/AdminWishlist'
@@ -23,6 +24,8 @@ export default function App() {
           <Route path="/kids-heroes" element={<KidsHeroes />} />
           <Route path="/pledge/:id" element={<PledgeForm />} />
           <Route path="/thank-you" element={<PledgeThankYou />} />
+          {/* A donor's pledge status. No login: the id is the private link. */}
+          <Route path="/pledge/status/:id" element={<PledgeStatus />} />
           {/* A donor's Kids Hero status + badge. No login: the id is the private link. */}
           <Route path="/hero/:id" element={<HeroStatus />} />
         </Route>

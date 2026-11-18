@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { getBadge, getPercent } from '../utils/badge'
+import ItemTypeChip from './ItemTypeChip'
 
 // One row on the admin wish list (Figma "AdminItemRow").
 // Normal mode: the whole row is a link to the edit page.
@@ -16,6 +17,9 @@ export default function AdminItemRow({ item, selecting, selected, onToggle }) {
         <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-semibold ${badge.style}`}>
           {badge.label}
         </span>
+      </div>
+      <div className="mt-1">
+        <ItemTypeChip type={item.item_type} />
       </div>
 
       <div className="mt-3 h-2.5 w-full rounded-full bg-line">

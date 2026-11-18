@@ -1,3 +1,5 @@
+import { ITEM_TYPES } from './itemTypes'
+
 // Checks for the admin "Add / Edit item" form.
 // Every rule here mirrors a CHECK in the database (see supabase/migrations),
 // so the admin sees a friendly message instead of a database error.
@@ -13,7 +15,7 @@ function charCount(text) {
 }
 
 // values: what the admin typed, all as strings
-//   { name, description, target_qty, unit_price, urgency }
+//   { name, description, target_qty, unit_price, urgency, item_type }
 // pledgedQty: how many are already pledged (0 for a new item)
 // Returns an object of error messages. Empty object = all good.
 export function validateItem(values, pledgedQty = 0) {
@@ -54,6 +56,11 @@ export function validateItem(values, pledgedQty = 0) {
     }
   }
 
+  // Type: required, one of the fixed list
+  if (!ITEM_TYPES.includes(values.item_type)) {
+    errors.item_type = 'Choose an item type.'
+  }
+
   // Urgency: the form only offers Urgent (high) or Needed (medium)
   if (values.urgency !== 'high' && values.urgency !== 'medium') {
     errors.urgency = 'Choose Urgent or Needed.'
@@ -74,5 +81,6 @@ export function toItemRow(values) {
     target_qty: Number(values.target_qty.trim()),
     unit_price: price ? Number(price) : null, // empty box → no price
     urgency: values.urgency,
+    item_type: values.item_type,
   }
 }

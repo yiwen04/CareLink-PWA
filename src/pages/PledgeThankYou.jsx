@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { thankYouSteps } from '../utils/thankYouSteps'
 
@@ -7,6 +8,18 @@ import { thankYouSteps } from '../utils/thankYouSteps'
 // (RLS), so if the page is opened directly or refreshed we show a general thank-you.
 export default function PledgeThankYou() {
   const { state: pledge } = useLocation()
+  const [copied, setCopied] = useState(false)
+
+  // Copy the full status link. Clipboard can be blocked, so ignore failures
+  // (the "View status" button still works).
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/pledge/status/${pledge.pledgeId}`)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
 
   const backButton = (
     <Link
@@ -30,7 +43,7 @@ export default function PledgeThankYou() {
     )
   }
 
-  const { name, itemName, qty, amount, reference, hasReceipt } = pledge
+  const { name, itemName, qty, amount, reference, hasReceipt, pledgeId } = pledge
 
   // The transfer already happened in the checkout sheet, so no bank details here
   const steps = thankYouSteps(hasReceipt)
@@ -69,6 +82,32 @@ export default function PledgeThankYou() {
           </li>
         ))}
       </ol>
+
+      {/* Private link to check this pledge later (also on another device) */}
+      {pledgeId && (
+        <div className="mt-6 rounded-2xl bg-accent p-4">
+          <p className="text-sm text-brand">
+            Save this link to check your pledge any time, even after you leave the site.
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <Link
+              to={`/pledge/status/${pledgeId}`}
+              data-cy="thanks-status-link"
+              className="rounded-xl bg-primary py-3 text-center font-semibold text-white"
+            >
+              View status
+            </Link>
+            <button
+              type="button"
+              onClick={copyLink}
+              data-cy="thanks-copy-link"
+              className="rounded-xl border-2 border-primary bg-white py-3 font-semibold text-primary"
+            >
+              {copied ? 'Copied!' : 'Copy link'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {backButton}
     </div>

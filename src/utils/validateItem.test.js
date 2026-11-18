@@ -1,5 +1,25 @@
 import { describe, it, expect } from 'vitest'
 import { validateItem, toItemRow } from './validateItem'
+import { ITEM_TYPES, itemTypeIcon } from './itemTypes'
+
+describe('itemTypes', () => {
+  it('has the 7 types in order', () => {
+    expect(ITEM_TYPES).toEqual([
+      'Food',
+      'Medical & Therapy',
+      'Education',
+      'Daily Essentials',
+      'Equipment',
+      'Bills & Maintenance',
+      'Others',
+    ])
+  })
+
+  it('has an icon for every type, and a fallback', () => {
+    for (const type of ITEM_TYPES) expect(itemTypeIcon(type)).toBeTruthy()
+    expect(itemTypeIcon('Unknown')).toBe(itemTypeIcon('Others'))
+  })
+})
 
 // A valid form; each test changes one field
 const good = {
@@ -8,6 +28,7 @@ const good = {
   target_qty: '10',
   unit_price: '',
   urgency: 'medium',
+  item_type: 'Food',
 }
 
 describe('validateItem', () => {
@@ -46,6 +67,14 @@ describe('validateItem', () => {
     expect(validateItem({ ...good, unit_price }).unit_price).toBeDefined()
   })
 
+  it.each(ITEM_TYPES)('accepts item type "%s"', (item_type) => {
+    expect(validateItem({ ...good, item_type }).item_type).toBeUndefined()
+  })
+
+  it.each(['', 'food', 'Toys', undefined])('rejects item type %j', (item_type) => {
+    expect(validateItem({ ...good, item_type }).item_type).toBeDefined()
+  })
+
   it('only allows Urgent (high) or Needed (medium)', () => {
     expect(validateItem({ ...good, urgency: 'high' }).urgency).toBeUndefined()
     expect(validateItem({ ...good, urgency: 'low' }).urgency).toBeDefined()
@@ -60,6 +89,7 @@ describe('toItemRow', () => {
       target_qty: 10,
       unit_price: null,
       urgency: 'medium',
+      item_type: 'Food',
     })
   })
 
