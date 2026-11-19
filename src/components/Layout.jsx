@@ -32,8 +32,23 @@ export default function Layout() {
         >
           ☰
         </button>
-        <img src="/logo.png" alt="" className="h-7 w-7" onError={(e) => (e.currentTarget.style.display = 'none')} />
-        <span className="text-lg font-semibold text-brand">CareLink</span>
+        {/* Logo + name link home. The mark is the cropped icon so it stays readable at this size. */}
+        <Link
+          to="/"
+          aria-label="CareLink home"
+          data-cy="header-home"
+          className="flex items-center gap-2.5 rounded-xl transition-opacity active:opacity-70"
+        >
+          <img
+            src="/logo-mark.png"
+            alt=""
+            width="48"
+            height="48"
+            className="h-12 w-12 object-contain"
+            onError={(e) => (e.currentTarget.style.display = 'none')}
+          />
+          <span className="text-xl font-bold tracking-tight text-brand">CareLink</span>
+        </Link>
       </header>
 
       {/* Drawer menu */}

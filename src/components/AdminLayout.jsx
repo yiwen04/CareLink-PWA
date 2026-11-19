@@ -34,13 +34,16 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-page font-sans text-ink">
       {/* Top bar */}
       <header className="sticky top-0 z-20 flex items-center gap-3 bg-brand px-4 py-3">
+        {/* White tile keeps the colourful logo readable on the dark bar */}
         <img
-          src="/logo.png"
+          src="/logo-mark.png"
           alt=""
-          className="h-7 w-7"
+          width="44"
+          height="44"
+          className="h-11 w-11 rounded-xl bg-white object-contain p-0.5"
           onError={(e) => (e.currentTarget.style.display = 'none')}
         />
-        <span className="text-lg font-semibold text-white">
+        <span className="text-xl font-bold tracking-tight text-white">
           CareLink <span className="font-normal text-accent">Admin</span>
         </span>
         <button
