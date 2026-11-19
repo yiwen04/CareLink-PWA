@@ -58,13 +58,16 @@ export default function AdminLogin() {
     <div className="flex min-h-screen flex-col bg-page font-sans text-ink">
       {/* Navy header band */}
       <header className="bg-brand px-4 pb-10 pt-8 text-center">
+        {/* White tile keeps the colourful logo readable on the navy band */}
         <img
-          src="/logo.png"
+          src="/logo-mark.png"
           alt=""
-          className="mx-auto h-12 w-12"
+          width="112"
+          height="112"
+          className="mx-auto h-28 w-28 rounded-3xl bg-white object-contain p-2 shadow-md"
           onError={(e) => (e.currentTarget.style.display = 'none')}
         />
-        <p className="mt-2 text-2xl font-bold text-white">CareLink</p>
+        <p className="mt-3 text-3xl font-bold tracking-tight text-white">CareLink</p>
         <p className="text-sm text-accent">Admin portal</p>
       </header>
 
