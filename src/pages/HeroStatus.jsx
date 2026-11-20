@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useHeroStatus } from '../hooks/useHeroStatus'
 import HeroBadge from '../components/HeroBadge'
 import BottomSheet from '../components/BottomSheet'
-import TransferDetails from '../components/TransferDetails'
+import PaymentDetails from '../components/PaymentDetails'
 import { formatDate } from '../utils/format'
 import { formatHeroAmount } from '../utils/heroAmount'
 import { nextTransferDate } from '../utils/heroDates'
@@ -192,11 +192,7 @@ export default function HeroStatus() {
 
       {showTransfer && (
         <BottomSheet title="Transfer details" onClose={() => setShowTransfer(false)}>
-          <TransferDetails title={`Transfer ${monthly} every month to:`} />
-          <p className="mt-4 text-sm text-muted">
-            Please add the reference <span className="font-semibold text-ink">{id.slice(0, 8).toUpperCase()}</span>{' '}
-            to your transfer note.
-          </p>
+          <PaymentDetails title={`Transfer ${monthly} every month to:`} reference={id.slice(0, 8).toUpperCase()} />
         </BottomSheet>
       )}
     </div>

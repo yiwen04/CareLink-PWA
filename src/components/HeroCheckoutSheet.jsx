@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import BottomSheet from './BottomSheet'
 import FormField from './FormField'
-import TransferDetails from './TransferDetails'
+import PaymentDetails from './PaymentDetails'
 import ReceiptUpload from './ReceiptUpload'
 import { useSubscribe } from '../hooks/useSubscribe'
 import { cleanDonor, validateDonor } from '../utils/donorDetails'
@@ -86,7 +86,7 @@ export default function HeroCheckoutSheet({ tier, amount, onClose, onSuccess }) 
             placeholder="012-345 6789" className={inputClass('phone')} data-cy="hero-phone" {...a11y('phone')} />
         </FormField>
 
-        <TransferDetails title={`Transfer ${monthly} every month to:`} />
+        <PaymentDetails title={`Transfer ${monthly} every month to:`} />
 
         <ReceiptUpload file={receipt} onChange={chooseReceipt} error={receiptError} disabled={submitting} required />
 
