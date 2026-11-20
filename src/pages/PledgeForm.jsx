@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import BottomSheet from '../components/BottomSheet'
-import TransferDetails from '../components/TransferDetails'
+import PaymentDetails from '../components/PaymentDetails'
 import ItemTypeChip from '../components/ItemTypeChip'
 import ReceiptUpload from '../components/ReceiptUpload'
 import { receiptPath, validateReceipt, validateRequiredReceipt } from '../utils/receipt'
@@ -277,7 +277,7 @@ export default function PledgeForm() {
           </div>
 
           <div className="mt-4">
-            <TransferDetails />
+            <PaymentDetails />
           </div>
 
           <p className="mt-4 text-sm text-muted">
